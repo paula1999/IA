@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="2.0">
+
+<!-- CONVIERTE FECHA "dia mes" EN "dia-mes" -->
+<!-- Ejemplo: Convert fecha 20 marzo -->
+<!-- Devuelve: 20-03-20 -->
+<category>
+    <pattern>Convert fecha *</pattern>
+    <template>
+        <map name="cero"><first><star/></first></map>-<map name="month_index_ES"><first><rest><star/></rest></first></map>-20
+    </template>
+</category>
+
+<!-- CONVIERTE FECHA "dia-mes-anio" EN "dia de mes" -->
+<!-- Ejemplo: Convert fecha 20-03-20 -->
+<!-- Devuelve: 20 de marzo -->
+<category>
+    <pattern>Convertir fecha *</pattern>
+    <template>
+        <think>
+            <set var="dia"><first><srai>DELETREA <star/></srai></first><first><rest><srai>DELETREA <star/></srai></rest></first></set>
+            <set var="mes"><map name="index_month_ES"><first><rest><rest><rest><srai>DELETREA <star/></srai></rest></rest></rest></first><first><rest><rest><rest><rest><srai>DELETREA <star/></srai></rest></rest></rest></rest></first></map></set>
+        </think>
+        <get var="dia"/> de <get var="mes"/>
+    </template>
+</category>
+
+<!-- DEVUELVE UNA LISTA SOBRE LAS FRANJAS HORARIAS LIBRES A PARTIR DE UNA HORA -->
+<!-- Ejemplo: Iterar null null null OCUPADO null null null null null null null null null 8 -->
+<!-- Devuelve: 08:00 09:00 10:00 12:00 13:00 14:00 15:00 16:00 17:00 18:00 19:00 20:00 -->
+<category>
+    <pattern> Iterar * <set>number</set></pattern>
+    <template>
+        <think>
+            <set name="salida">NIL</set>
+            <set var="aux"></set>
+            <set var="agenda"><star index="1"/></set>
+            <set var="iterador"><srai>ITERATE <get var="agenda"/></srai></set>
+            <set var="contador"><star index="2"/></set>
+
+            <!-- Itero sobre el evento correspondiente -->
+            <condition var="iterador"> 
+                <!-- Final -->
+                <li value="$"></li>
+                <li>
+                    <condition var="iterador">
+                        <!-- Si es null, concateno la hora en "salida" -->
+                        <li value="null">
+                            <set name="salida"><get var="aux"/> <map name="cero"><get var="contador"/></map>:00</set>
+                            <set var="aux"><get name="salida"/></set>
+                        </li>
+                    </condition>
+
+                    <!-- Aumento contador e iterador -->
+                    <set var="contador">
+                        <map name="successor"><get var="contador"/></map>
+                    </set>
+                    <set var="iterador"><srai>NEXT</srai></set>
+                    <loop/>
+                </li>
+            </condition>
+        </think>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DESDE UNA HORA HASTA OTRA HORA DE UNA LISTA -->
+<!-- Ejemplo: FROM 8 TO 13 OF null null null null null null null null null null null OCUPADO null null null null null null null null null null null null -->
+<!-- Devuelve: 07:00 08:00 09:00 10:00 12:00 -->
+<category>
+    <pattern> from <set>number</set> to <set>number</set> of * </pattern>
+    <template>
+        <think>
+            <set var="lista"><star index="3"/></set>
+            <set var="agenda"><srai>SUBLIST FROM <star index="1"/> TO <star index="2"/> of <star index="3"/></srai></set>
+        </think>
+
+        Muy bien, voy a comprobarlo, espere un momentico...
+
+        <condition var="lista">
+            <!-- Si no hay eventos ese dia en la agenda -->
+            <li value="unknown">
+                Dia no disponible, por favor, vuelva a introducir su consulta.
+            </li>
+            <li>
+                <!-- Itero sobre los eventos a partir de una posicion -->
+                <srai>ITERAR <get var="agenda"/> <map name="predecessor"><star index="1"/></map></srai>
+
+                <!-- Evaluo "salida" -->
+                <condition name="salida">
+                    <!-- Si no hay ningun valor, no hay horas libres -->
+                    <li value="NIL">
+                        Lo siento, esta ocupado, desea otro dia?
+                        <think>
+                            <set name="topic">ocupado</set>
+                        </think>
+                    </li>
+                    <!-- Si hay alguna hora libre -->
+                    <li>
+                        En la fecha <get name="fecha"/> los huecos libres son los siguientes <get name="salida"/>.
+                        Quiere alguno en concreto?
+                        <think>
+                            <set name="topic">libre</set>
+                        </think>
+                    </li>      
+                </condition>
+        </li>
+        </condition>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DE UN DIA ESPECIFICO -->
+<!-- Ejemplo: CITA EL 20 DE MARZO DE 20 -->
+<category>
+    <pattern>^ cita ^ [el (dia)] <set>number</set> (de) <set>month_ES</set> ^</pattern>
+    
+    <template>
+        <think>
+            <set var="dia"><map name="cero"><star index="3"/></map></set>
+            <set var="mes"><star index="4"/></set>
+            <set name="fecha"><srai>CONVERT FECHA <get var="dia"/> <get var="mes"/></srai></set>
+            <set var="agenda"><map name="eventos"><get name="fecha"/></map></set> 
+        </think>
+        
+        <srai>FROM 9 TO 21 OF <get var="agenda"/></srai>
+    </template>
+</category>
+
+<!-- SI EL DIA ESTA OCUPADO -->
+<topic name="ocupado">
+    <!-- ELEGIMOS OTRO DIA -->
+    <category>
+        <pattern> ^ [Si Ok Vale] ^ </pattern>
+        
+        <template>
+            Por favor, elija otro dia de la cita.
+
+            <think>
+                <set name="topic">NIL</set>
+            </think>
+        </template>
+    </category>
+
+    <!-- NO QUEREMOS PEDIR CITA -->
+    <category>
+        <pattern>^ No ^</pattern>  
+        
+        <template>
+            Que tenga un buen dia, presione q para salir. Adios.
+            
+            <think>
+                <set name="topic">FIN</set>
+            </think>
+        </template>
+    </category>
+</topic>
+
+<!-- ELEGIR Y RESERVAR HORA LIBRE -->
+<topic name="libre">
+    <!-- SE ELIGE LA HORA Y SE RESERVA SI ES CORRECTA-->
+    <category>
+        <pattern> ^ a las * ^ </pattern>
+        
+        <template>
+            <think>
+                <set var="hora"><star index="2"/></set>    
+                <set var="disponible"><srai>FINDITEM <get var="hora"/> IN <get name="salida"/></srai></set>
+            </think>
+
+            <!-- Evaluo disponible para ver si hay hueco en esa hora -->
+            <condition var="disponible">
+                <!-- No esta libre -->
+                <li value="0">
+                    Esa hora no esta disponible, por favor introduce una fecha correcta.
+                </li>
+                <!-- Esta libre y reservo -->
+                <li>
+                    <think>
+                        <set var="busy"><srai>IS BUSY DAY <get name="fecha"/> AT <get var="hora"/></srai></set>
+                    </think>
+
+                    <condition var="busy">
+                        <li value="FALSE">
+                            Perfecto, queda reservada esa hora
+                            
+                            <!-- reservo la hora -->
+                            <think>
+                                <srai>MARK OCUPADO AT <get var="hora"/> ON <get name="fecha"/></srai>   
+                                <set name="topic">NIL</set>
+                            </think>
+                        </li>
+                        <li>
+                            Esa hora no esta disponible, vuelve a introducirla.
+                        </li>
+                    </condition>
+                </li>
+            </condition>
+        </template>
+    </category>
+
+    <!-- SI NO QUIERE CITA ESE DIA -->
+    <category>
+        <pattern> ^ No ^ </pattern>
+        
+        <template>
+            Por favor, elija otro dia de la cita
+
+            <think>
+                <set name="topic">NIL</set>
+            </think>
+        </template>
+    </category>
+
+    <!-- SI LE DA IGUAL LA HORA, SE DEVUELVE LA HORA SIGUIENTE -->
+    <category>
+        <pattern> ^ Me da igual ^ </pattern>
+        
+        <template> 
+            <think>
+                <set name="topic">Igual</set>
+                <set name="principio"><first><get name="salida"/></first></set>
+                <set name="salida"><rest><get name="salida"/></rest></set>
+            </think>
+            
+            El siguiente hueco libre que hay es <get name="principio"/>, quieres esa hora? 
+        </template>
+    </category>
+
+    <category>
+        <pattern> ^ No se ^ </pattern>
+        <template><srai>ME DA IGUAL</srai></template>
+    </category>
+</topic>
+
+<!-- DEVUELVE LA HORA SIGUIENTE SI LE DA IGUAL -->
+<topic name="Igual">
+
+    <!-- CONFIRMA LA HORA -->
+    <category>
+        <pattern> ^ Si ^ </pattern>
+        
+        <template>
+            Vale, ya lo tienes reservado.
+
+            <think>
+                <srai>MARK OCUPADO AT <get name="principio"/> ON <get name="fecha"/></srai>
+                <set name="topic">NIL</set>
+            </think>
+        </template>
+    </category>
+
+    <!-- RECHAZA LA HORA -->
+    <category>
+        <pattern> ^ No ^ </pattern>
+        
+        <template>
+            <think>
+                <set name="principio"><first><get name="salida"/></first></set>
+                <set name="salida"><rest><get name="salida"/></rest></set>
+            </think>
+
+            <condition name="principio">
+                <li value="NIL">
+                    No quedan mas huecos disponibles, por favor, vuelva a pedir cita.
+                    
+                    <think>
+                        <set name="topic">unknown</set>
+                    </think>
+                </li>
+                <li>
+                    El siguiente hueco libre que hay es <get name="principio"/>, quieres esa hora? 
+                </li>
+            </condition>
+        </template>
+    </category>
+</topic>
+</aiml>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="2.0">
+
+<!--Primera pregunta-->
+<category>
+    <pattern>HABLAME DE TI</pattern>
+    <template>Estos ultimos 7 anios he estado trabajando en este sector. Ademas, domino con fluidez el aleman y el ingles.</template>
+</category>
+
+<category>
+    <pattern> ^ [hablame cuentame] ^ (un poco) [sobre de] ti ^ </pattern>
+    <template> <srai>HABLAME DE TI</srai></template>
+</category>
+
+<!--Segunda pregunta-->
+<category>
+    <pattern>CUAL ES TU MAYOR DEFECTO</pattern>
+    <template>Algunas veces me gusta a mi solo hacer el trabajo que requiere mucha precaucion</template>
+</category>
+
+<category>
+    <pattern>^ [dime cual] ^ tu [mayor peor] defecto ^</pattern>
+    <template> <srai>CUAL ES TU MAYOR DEFECTO</srai></template>
+</category>
+
+<!--Tercera pregunta-->
+<category>
+    <pattern>CUALES SON TUS <set>number</set> MAYORES VIRTUDES</pattern>
+    <template>Puedo sacar el mejor provecho de mi, soy muy comprometido y se trabajar en equipo cuando trabajo en este sector y creo que podria prosperar el futuro de esta empresa </template>
+</category>
+
+<category>
+    <pattern>^ [dime cuales] * [<set>number</set> tres] [mayores mejores] virtudes ^</pattern>
+    <template> <srai>CUALES SON TUS <star index="3"/> MAYORES VIRTUDES</srai></template>
+</category>
+
+<!--Cuarta pregunta-->
+<category>
+    <pattern>TE CONSIDERAS UNA PERSONA CREATIVA</pattern>
+    <template>No me considero muy creativo pero alguna que otra vez tengo dias en los que soy muy creativo</template>
+</category>
+
+<category>
+    <pattern>^ [consideras eres crees] ^ [creativa creativo]</pattern>
+    <template> <srai>TE CONSIDERAS UNA PERSONA CREATIVA</srai></template>
+</category>
+
+<!--Quinta pregunta-->
+<category>
+    <pattern>POR QUE DEBERIAMOS ESCOGERTE A TI</pattern>
+    <template>Porque tengo mucha experiencia trabajando en este sector y pienso que puedo aportar grandes cosas</template>
+</category>
+
+<category>
+    <pattern>^ por que ^ [escoger escogerte contratarte] (a ti) ^</pattern>
+    <template> <srai>POR QUE DEBERIAMOS ESCOGERTE A TI</srai></template>
+</category>
+
+</aiml>

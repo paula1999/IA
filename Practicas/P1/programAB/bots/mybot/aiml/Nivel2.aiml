@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="2.0">
+
+<!-- DEVUELVE LAS HORAS LIBRES DE UN DIA POR LA TARDE -->
+<!-- Ejemplo: CITA EL 20 DE MARZO por la tarde -->
+<category>
+    <pattern>^ cita # [el (dia)] <set>number</set> (de) <set>month_ES</set> ^ por la tarde ^</pattern>
+    
+    <template>
+        <think>
+            <set var="dia"><map name="cero"><star index="3"/></map></set>
+            <set var="mes"><star index="4"/></set>
+            <set name="fecha"><srai>CONVERT FECHA <get var="dia"/> <get var="mes"/></srai></set>
+            <set var="agenda"><map name="eventos"><get name="fecha"/></map></set>
+        </think>
+
+        <srai>FROM 14 TO 21 OF <get var="agenda"/></srai>
+    </template>
+</category>
+
+
+<!-- DEVUELVE LAS HORAS LIBRES DE UN DIA ESPECIFICO POR LA MANIANA -->
+<!-- Ejemplo: CITA EL 20 DE MARZO por la maniana -->
+<category>
+    <pattern>^ cita # [el (dia)] <set>number</set> (de) <set>month_ES</set> ^ por la maniana ^</pattern>
+
+    <template>
+        <think>
+            <set var="dia"><map name="cero"><star index="3"/></map></set>
+            <set var="mes"><star index="4"/></set>
+            <set name="fecha"><srai>CONVERT FECHA <get var="dia"/> <get var="mes"/></srai></set>
+            <set var="agenda"><map name="eventos"><get name="fecha"/></map></set>
+        </think>
+
+        <srai>FROM 9 TO 13 OF <get var="agenda"/></srai>
+    </template>
+</category>
+
+<!-- RESERVA UN DIA ESPECIFICO A UNA HORA ESPECIFICA -->
+<!-- Ejemplo: CITA EL 20 DE MARZO a las 10:00 -->
+<category>
+    <pattern>^ cita # [el (dia)] <set>number</set> (de) <set>month_ES</set> ^ a las *</pattern>
+
+    <template>
+        <think>
+            <set var="dia"><map name="cero"><star index="3"/></map></set>
+            <set var="mes"><star index="4"/></set>
+            <set name="fecha"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</set>
+            <set var="agenda"><map name="eventos"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</map></set>
+            <srai>FROM 9 TO 21 OF <get var="agenda"/></srai>
+        </think>
+
+        <srai>A LAS <star index="6"/></srai>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DE HOY POR LA TARDE -->
+<!-- Ejemplo: CITA HOY POR LA TARDE -->
+<category>
+    <pattern> ^ cita # hoy (por la) tarde ^ </pattern>
+    
+    <template>
+        <think>
+            <set var="dia"><map name="cero"><first><srai>DATE</srai></first></map></set>
+            <set var="mes"><srai>MONTH</srai></set>
+            <set name="fecha"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</set>
+            <set var="agenda"><map name="eventos"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</map></set>
+        </think>
+
+        <srai>FROM 14 TO 21 OF <get var="agenda"/></srai>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DE HOY POR LA MANIANA -->
+<!-- Ejemplo: CITA HOY POR LA MANIANA -->
+<category>
+    <pattern> ^ cita # hoy (por la) maniana ^ </pattern>
+    
+    <template>
+        <think>
+            <set var="dia"><map name="cero"><first><srai>DATE</srai></first></map></set>
+            <set var="mes"><srai>MONTH</srai></set>
+            <set name="fecha"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</set>
+            <set var="agenda"><map name="eventos"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</map></set>
+        </think>
+
+        <srai>FROM 9 TO 13 OF <get var="agenda"/></srai>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DE HOY -->
+<!-- Ejemplo: CITA HOY -->
+<category>
+    <pattern> ^ cita ^ hoy </pattern>
+    
+    <template>
+        <srai>CITA EL <first><srai>DATE IN 0 DAYS</srai></first> DE <first><rest><srai>DATE IN 0 DAYS</srai></rest></first></srai>
+    </template>
+</category>
+
+<!-- RESERVA HOY A UNA HORA ESPECIFICA -->
+<!-- Ejemplo: CITA HOY A LAS 10:00 -->
+<category>
+    <pattern> ^ cita ^ hoy a las * </pattern>
+    <template>
+        <think>
+            <srai>CITA EL <first><srai>DATE IN 0 DAYS</srai></first> DE <first><rest><srai>DATE IN 0 DAYS</srai></rest></first></srai>
+        </think>
+        
+        <srai>A LAS <star index="3"/></srai>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DE MANIANA POR LA TARDE -->
+<!-- Ejemplo: CITA MANIANA POR LA TARDE -->
+<category>
+    <pattern> ^ cita # maniana (por la) tarde ^ </pattern>
+    
+    <template>
+        <think>
+            <set var="dia"><map name="cero"><first><srai>DATE IN 1 DAYS</srai></first></map></set>
+            <set var="mes"><first><rest><srai>DATE IN 2 DAYS</srai></rest></first></set>
+            <set name="fecha"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</set>
+            <set var="agenda"><map name="eventos"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</map></set>
+        </think>
+
+        <srai>FROM 14 TO 21 OF <get var="agenda"/></srai>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DE MANIANA POR LA MANIANA -->
+<!-- Ejemplo: CITA MANIANA POR LA MANIANA -->
+<category>
+    <pattern> ^ cita # maniana (por la) maniana ^ </pattern>
+    
+    <template>
+        <think>
+            <set var="dia"><map name="cero"><first><srai>DATE IN 1 DAYS</srai></first></map></set>
+            <set var="mes"><first><rest><srai>DATE IN 1 DAYS</srai></rest></first></set>
+            <set name="fecha"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</set>
+            <set var="agenda"><map name="eventos"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</map></set>
+        </think>
+
+        <srai>FROM 9 TO 13 OF <get var="agenda"/></srai>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DE MANIANA -->
+<!-- Ejemplo: CITA MANIANA -->
+<category>
+    <pattern> ^ cita ^ maniana </pattern>
+    
+    <template>
+        <srai>CITA EL <first><srai>DATE IN 1 DAYS</srai></first> DE <first><rest><srai>DATE IN 1 DAYS</srai></rest></first></srai>
+    </template>
+</category>
+
+<!-- RESERVA MANIANA A UNA HORA ESPECIFICA -->
+<!-- Ejemplo: CITA MANIANA A LAS 10:00 -->
+<category>
+    <pattern> ^ cita ^ maniana a las *</pattern>
+    
+    <template>
+        <think>
+            <srai>CITA EL <first><srai>DATE IN 1 DAYS</srai></first> DE <first><rest><srai>DATE IN 1 DAYS</srai></rest></first></srai>
+        </think>
+
+        <srai>A LAS <star index="3"/></srai>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DE PASADO MANIANA POR LA TARDE -->
+<!-- Ejemplo: CITA PASADO MANIANA POR LA TARDE -->
+<category>
+    <pattern> ^ cita # pasado maniana (por la) tarde ^ </pattern>
+    
+    <template>
+        <think>
+            <set var="dia"><map name="cero"><first><srai>DATE IN 2 DAYS</srai></first></map></set>
+            <set var="mes"><first><rest><srai>DATE IN 2 DAYS</srai></rest></first></set>
+            <set name="fecha"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</set>
+            <set var="agenda"><map name="eventos"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</map></set>
+        </think>
+
+        <srai>FROM 14 TO 21 OF <get var="agenda"/></srai>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DE PASADO MANIANA POR LA MANIANA -->
+<!-- Ejemplo: CITA PASADO MANIANA POR LA MANIANA -->
+<category>
+    <pattern> ^ cita # pasado maniana (por la) maniana ^ </pattern>
+    
+    <template>
+        <think>
+            <set var="dia"><map name="cero"><first><srai>DATE IN 2 DAYS</srai></first></map></set>
+            <set var="mes"><first><rest><srai>DATE IN 2 DAYS</srai></rest></first></set>
+            <set name="fecha"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</set>
+            <set var="agenda"><map name="eventos"><get var="dia"/>-<map name="month_index_ES"><get var="mes"/></map>-20</map></set>
+        </think>
+
+        <srai>FROM 9 TO 13 OF <get var="agenda"/></srai>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DE PASADO MANIANA -->
+<!-- Ejemplo: CITA PASADO MANIANA -->
+<category>
+    <pattern> ^ cita ^ pasado maniana </pattern>
+    
+    <template>
+        <srai>CITA EL <first><srai>DATE IN 2 DAYS</srai></first> DE <first><rest><srai>DATE IN 2 DAYS</srai></rest></first></srai>
+    </template>
+</category>
+
+<!-- RESERVA PASADO MANIANA A UNA HORA ESPECIFICA -->
+<!-- Ejemplo: CITA PASADO MANIANA A LAS 10:00 -->
+<category>
+    <pattern> ^ cita ^ pasado maniana a las * </pattern>
+    
+    <template>
+        <think>
+            <srai>CITA EL <first><srai>DATE IN 2 DAYS</srai></first> DE <first><rest><srai>DATE IN 2 DAYS</srai></rest></first></srai>
+        </think>
+
+        <srai>A LAS <star index="3"/></srai>
+    </template>
+</category>
+
+
+<!-- DEVUELVE LAS HORAS LIBRES DE UN PROXIMO DIA POR LA TARDE-->
+<!-- Ejemplo: CITA EL PROXIMO MARTES POR LA TARDE -->
+<category>
+    <pattern> ^ cita # [proximo siguiente] <set>weekday_es</set> ^ (por la) tarde ^ </pattern>
+    
+    <template>
+        <think>
+            <set var="fecha_completa"><srai>DATE ON <star index="3"/></srai></set>
+            <set name="fecha"><map name="cero"><first><get var="fecha_completa"/></first></map>-<map name="month_index_ES"><first><rest><get var="fecha_completa"/></rest></first></map>-20</set>
+            <set var="agenda"><map name="eventos"><get name="fecha"/></map></set>
+        </think>
+        
+        <srai>FROM 14 TO 21 OF <get var="agenda"/></srai>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DE UN PROXIMO DIA POR LA MANIANA-->
+<!-- Ejemplo: CITA EL PROXIMO MARTES POR LA MANIANA -->
+<category>
+    <pattern> ^ cita # [proximo siguiente] <set>weekday_es</set> ^ (por la) maniana ^ </pattern>
+    
+    <template>
+        <think>
+            <set var="fecha_completa"><srai>DATE ON <star index="3"/></srai></set>
+            <set name="fecha"><map name="cero"><first><get var="fecha_completa"/></first></map>-<map name="month_index_ES"><first><rest><get var="fecha_completa"/></rest></first></map>-20</set>
+            <set var="agenda"><map name="eventos"><get name="fecha"/></map></set>
+        </think>
+        
+        <srai>FROM 9 TO 13 OF <get var="agenda"/></srai>
+    </template>
+</category>
+
+<!-- DEVUELVE LAS HORAS LIBRES DE UN PROXIMO DIA -->
+<!-- Ejemplo: CITA EL PROXIMO MARTES -->
+<category>
+    <pattern> ^ cita ^ [proximo siguiente] <set>weekday_es</set> </pattern>
+    
+    <template>
+        <think>
+            <set var="agenda"><srai>DATE ON <star index="3"/></srai></set>
+        </think>
+        
+        <srai>CITA EL <get var="agenda"/></srai>
+    </template>
+</category>
+
+<!-- RESERVA UN PROXIMO DIA A UNA HORA ESPECIFICA -->
+<!-- Ejemplo: CITA EL PROXIMO MARTES A LAS 10:00 -->
+<category>
+    <pattern> ^ cita ^ [proximo siguiente] <set>weekday_es</set> a las * </pattern>
+    
+    <template>
+        <think>
+            <set var="agenda"><srai>DATE ON <star index="3"/></srai></set>
+            <srai>CITA EL <get var="agenda"/></srai>
+        </think>
+        
+        <srai>A LAS <star index="4"/></srai>
+    </template>
+</category>
+
+</aiml>

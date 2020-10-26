@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="2.0">
+
+<!-- SALUDOS -->
+<category>
+    <pattern>HOLA</pattern>
+    <template>Clinica Villanueva, buenos dias. En que puedo ayudarle?</template>
+</category>
+
+<category>
+    <pattern>Buenos dias</pattern>
+    <template><srai>HOLA</srai></template>
+</category>
+
+<category>
+    <pattern>Buenas (tardes)</pattern>
+    <template><srai>HOLA</srai></template>
+</category>
+
+<!-- COMPRUEBA SI UN DIA ESTA LIBRE DESDE UNA HORA HASTA UNA HORA DE UNA AGENDA -->
+<category>
+    <pattern>Esta libre from * to * of *</pattern>
+    <template>
+        <think>
+            <set var="agenda"><srai>SUBLIST FROM 9 TO 21 OF <map name="eventos"><star index="3"/></map></srai></set>
+            <set var="aux">NIL</set>
+            <set var="iterador"><srai>ITERATE <get var="agenda"/></srai></set>
+
+            <!-- Itera sobre el evento de dicho dia-->
+            <condition var="iterador">
+                <!-- Fin -->
+                <li value="$"></li>
+                <li>
+                    <condition var="iterador">
+                        <!-- Si hay una hora libre, termina -->
+                        <li value="null">
+                            <set var="iterador">$</set>
+                            <set var="aux"><star index="3"/></set>
+                        </li>
+                        <li>
+                            <set var="iterador"><srai>NEXT</srai></set>
+                        </li>
+                    </condition>
+                    <loop/>
+                </li>
+            </condition>
+        </think>
+
+        <get var="aux"/>
+    </template>
+</category>
+
+<!-- Calculo el numero de dias hasta la fecha solicitada -->
+<category>
+    <pattern>CALCULAR NUM DIAS *</pattern>
+    <template>
+        <think>
+                <set name="dia_elegido">unkown</set>
+                <set var="dia_sem"><star index="1"/></set>
+                <set name="error">false</set>
+                    
+                <condition var="dia_sem">
+                    <li value="martes">
+                        <set name="dia_elegido"><first><rest><get name="dias_l"/></rest></first></set>
+                    </li>
+                    <li value="miercoles">
+                        <set name="dia_elegido"><first><rest><rest><get name="dias_l"/></rest></rest></first></set>
+                    </li>
+                    <li value="jueves">
+                        <set name="dia_elegido"><first><rest><rest><rest><get name="dias_l"/></rest></rest></rest></first></set>               
+                    </li>
+                    <li value="viernes">
+                        <set name="dia_elegido"><first><rest><rest><rest><rest><get name="dias_l"/></rest></rest></rest></rest></first></set>
+                    </li>
+                    <li value="sabado">
+                        <set name="error">true</set>
+                    </li>
+                    <li value="domingo">
+                        <set name="error">true</set>
+                    </li>
+                </condition>
+        </think>
+    </template>
+</category>
+
+<!-- EL USUARIO ELIGE UN DIA  -->
+<!-- Ejemplo: CITA EL MARTES DE ESA SEMANA -->
+<category>
+    <pattern>^ cita ^ el ^ <set>weekday_es</set> de esa semana</pattern>
+    <template>
+        <think>
+            <srai>CALCULAR NUM DIAS <star index="4"/></srai>
+        </think>
+
+        <condition name="error">
+            <li value="true">
+                Por favor, elija un dia de lunes a viernes
+            </li>
+            <li>
+                <think>
+                    <set name="topic">unkown</set>
+                </think>
+
+                <srai>CITA EL <srai>CONVERTIR FECHA <get name="dia_elegido"/></srai></srai>                    
+            </li>
+        </condition>
+    </template>
+</category>
+
+<!-- EL USUARIO ELIGE UN DIA POR LA MANIANA -->
+<!-- Ejemplo: CITA EL MARTES DE ESA SEMANA POR LA MANIANA -->
+<category>
+    <pattern>^ cita ^ el ^ <set>weekday_es</set> de esa semana por la maniana</pattern>
+    <template>
+        <think>
+            <srai>CALCULAR NUM DIAS <star index="4"/></srai>
+        </think>
+
+        <condition name="error">
+            <li value="true">
+                Por favor, elija un dia de lunes a viernes
+            </li>
+            <li>
+                <think>
+                    <set name="topic">unkown</set>
+                </think>
+
+                <srai>CITA EL <srai>CONVERTIR FECHA <get name="dia_elegido"/></srai> POR LA MANIANA</srai>                   
+            </li>
+        </condition>
+    </template>
+</category>
+
+<!-- EL USUARIO ELIGE UN DIA POR LA TARDE -->
+<!-- Ejemplo: CITA EL MARTES DE ESA SEMANA POR LA TARDE -->
+<category>
+    <pattern>^ cita ^ el ^ <set>weekday_es</set> de esa semana por la tarde</pattern>
+    <template>
+        <think>
+            <srai>CALCULAR NUM DIAS <star index="4"/></srai>
+        </think>
+
+        <condition name="error">
+            <li value="true">
+                Por favor, elija un dia de lunes a viernes
+            </li>
+            <li>
+                <think>
+                    <set name="topic">unkown</set>
+                </think>
+
+                <srai>CITA EL <srai>CONVERTIR FECHA <get name="dia_elegido"/></srai> POR LA TARDE</srai>                    
+            </li>
+        </condition>
+    </template>
+</category>
+
+<!-- DEVUELVE LOS DIAS LIBRES DE UNA SEMANA DE LUNES A VIERNES -->
+<category>
+    <pattern>semana from * to * from * to *</pattern>
+    <template>
+        <think>
+            <set var="dia_inicio"><star index="1"/></set>
+            <set var="dia_fin"><star index="2"/></set>
+            <set var="agenda"></set>
+            <set name="dias_l"></set>
+            <set var="dia_actual"><get var="dia_inicio"/></set>
+        
+            <!-- Evalua "dia_actual" -->
+            <condition var="dia_actual">
+                <!-- Si es el ultimo dia a evaluar, comprueba si esta libre y termina -->
+                <li><value><get var="dia_fin"/></value>
+                    <set var="agenda"><srai>CONVERT FECHA <get var="dia_actual"/></srai></set>
+                    <set var="aux"><srai>ESTA LIBRE FROM <star index="3"/> TO <star index="4"/> OF <get var="agenda"/></srai></set>
+                    
+                    <condition var="aux">
+                        <li value="NIL">
+                        </li>
+                        <li>
+                            <set name="dias_l"><get name="dias_l"/> <get var="aux"/></set>
+                        </li>
+                    </condition>
+                </li>
+                <!-- Si no es el ultimo dia a evaluar, comprueba si esta libre y aumenta el dia -->
+                <li>
+                    <set var="agenda"><srai>CONVERT FECHA <get var="dia_actual"/></srai></set>
+                    <set var="aux"><srai>ESTA LIBRE FROM <star index="3"/> TO <star index="4"/> OF <get var="agenda"/></srai></set>
+
+                    <condition var="aux">
+                        <li value="NIL">
+                        </li>
+                        <li>
+                            <set name="dias_l"><get name="dias_l"/> <get var="aux"/></set>
+                        </li>
+                    </condition>
+
+                    <set var="dia_actual"><srai>TOMORROWDATE <get var="dia_actual"/></srai></set>
+                    <loop/>
+                </li>
+            </condition>
+        </think>
+
+        Los dias libres de la semana desde <star index="1"/> hasta <star index="2"/> son: <get name="dias_l"/>
+        
+    </template>
+</category>
+
+<!-- DEVUELVE LOS DIAS LIBRES DE ESTA SEMANA -->
+<category>
+    <pattern>Esta semana</pattern>
+    <template>
+        <srai>SEMANA FROM <srai>DATE IN 0 DAYS</srai> TO <srai>DATE IN <srai>DAYS UNTIL VIERNES</srai> DAYS</srai> FROM 9 TO 21</srai>
+    </template>
+</category>
+
+<!-- SI NO LE DICES LA HORA, TE LA PREGUNTA AL CONCERTAR CITA -->
+<!-- Ejemplo: QUIERO PEDIR CITA -->
+<category>
+    <pattern>^ [Pedir Concertar] ^ cita </pattern>
+    <template>
+        Para cuando?
+
+        <think>
+            <set name="topic">Concertar</set>
+        </think>
+    </template>
+</category>
+
+<topic name="Concertar">
+    <!-- SI LE DA IGUAL, PREGUNTAR SOBRE ESTA SEMANA -->
+    <category>
+        <pattern>^ [No se] ^ (Me da igual) ^</pattern>
+        <template>
+            Quiere cita para esta semana?
+
+            <think>
+                <set name="topic">No_claro</set>
+                <set name="cont_lunes">0</set>
+            </think>
+        </template>
+    </category>
+</topic>
+
+<!-- EL USUARIO ELIGE LA SEMANA Y DEVOLVEMOS LOS DIAS LIBRES DE ESTA -->
+<!-- Ejemplo: NO PERO PUEDO LA SEMANA DEL 30 MARZO 20 AL 3 ABRIL 20 -->
+<category>
+    <pattern># No (pero) ^ [puedo tengo libre] ^ la semana del * al *</pattern>
+    <template>
+        <srai>SEMANA FROM <star index="4"/> TO <star index="5"/> FROM 9 TO 21</srai>          
+    </template>
+</category>
+
+<topic name="No_claro">
+    <!-- SI NO QUIERE, PREGUNTAR SOBRE LA SEMANA SIGUIENTE -->
+    <category>
+        <pattern>^ No ^</pattern>
+        <template>
+            Para la siguiente?
+
+            <think>
+                <set name="topic">No_claro_sem</set>
+                <set name="cont_lunes"><map name="successor"><get name="cont_lunes"/></map></set>
+                <set var="lunes"><srai>DAYS UNTIL lunes</srai></set>
+                <set var="viernes"><srai>DAYS UNTIL viernes</srai></set>
+
+                <condition var="lunes">
+                    <li value="0">
+                        <set name="num_dias">6</set>
+                        <set name="sem_i"><srai>DATE A WEEK FROM lunes</srai></set>
+                    </li>
+                    <li>
+                        <set name="num_dias">DAYS UNTIL LUNES</set>
+                        <set name="sem_i"><srai>DATE IN <get var="lunes"/> DAYS</srai></set>
+                    </li>
+                </condition>
+
+                <set name="sem_f"><srai>DATE A WEEK FROM viernes</srai></set>
+            </think>
+        </template>
+    </category>
+
+    <!-- SI QUIERE, DECIRLE LOS DIAS LIBRES -->
+    <category>
+        <pattern>^ Si ^</pattern>
+        <template>
+            <think>
+                <set name="num_dias">0</set>
+                <set name="topic">sem_especial</set>
+            </think>
+            
+            Tengo libres los dias:
+            
+            <srai>ESTA SEMANA</srai>
+        </template>
+    </category>
+</topic>
+
+<topic name="No_claro_sem">
+    <!-- SI NO QUIERE, PREGUNTARLE SOBRE LA SIGUIENTE SEMANA -->
+    <category>
+        <pattern>^ No ^</pattern>
+        <template>
+            <think>
+                <set name="cont_lunes"><map name="successor"><get name="cont_lunes"/></map></set>
+                <set var="num_lunes"><map name="semana"><srai>WEEKDAY IN 0 DAYS</srai></map></set>
+                <set var="iterador"><srai>ITERATE <get var="num_lunes"/></srai></set>
+                <set var="contador">1</set>
+                
+                <condition var="contador">
+                    <li><value><get name="cont_lunes"/></value>
+                        <condition var="iterador">
+                            <li value="$">
+                                <set var="sal">Error, fecha no disponible. Vuelva a introducir el motivo de su consulta</set>
+                                <set name="topic">unknown</set>
+                            </li>
+                            <li>
+                                <set name="num_dias"><get var="iterador"/></set>
+                                <set name="sem_i"><srai>DATE IN <get var="iterador"/> DAYS</srai></set>
+                                <set name="sem_f"><srai>DATE IN <srai>SUCCESSOR <srai>SUCCESSOR <srai>SUCCESSOR <srai>SUCCESSOR <get var="iterador"/></srai></srai></srai></srai> DAYS</srai></set>
+                                
+                                <set var="sal">Pues ya tendria que ser la semana del <get name="sem_i"/> hasta <get name="sem_f"/></set>
+                            </li>
+                        </condition>
+                    </li>
+                    <li>             
+                        <set var="iterador"><srai>NEXT</srai></set>
+                        <set var="contador"><map name="successor"><get var="contador"/></map></set>       
+                        
+                        <loop/>
+                    </li>
+                </condition>
+            </think> 
+
+            <get var="sal"/>
+        </template>
+    </category>
+
+    <!-- SI QUIERE, DECIRLE LOS DIAS LIBRES -->
+    <category>
+        <pattern>^ Si ^</pattern>
+        <template>
+            <srai>SEMANA FROM <get name="sem_i"/> TO <get name="sem_f"/> FROM 9 TO 21</srai>
+        </template>
+    </category>
+</topic>
+
+<topic name="sem_especial">
+    <category>
+        <pattern>CALCULAR DIA ESPECIAL *</pattern>
+        <template>
+            <think>
+                <set var="dia_sem"><star index="1"/></set>
+                <set name="error">false</set>
+                <set var="dia_hoy"><srai>DAY</srai></set>
+                    
+                <condition var="dia_hoy">
+                    <li value="lunes">
+                        <srai>CALCULAR NUM DIAS <get var="dia_sem"/></srai>
+                    </li>
+                    <li value="martes">
+                        <condition var="dia_sem">
+                            <li value="martes">
+                                <set name="dia_elegido"><first><get name="dias_l"/></first></set>
+                            </li>
+                            <li value="miercoles">
+                                <set name="dia_elegido"><first><rest><get name="dias_l"/></rest></first></set>
+                            </li>
+                            <li value="jueves">
+                                <set name="dia_elegido"><first><rest><rest><get name="dias_l"/></rest></rest></first></set>               
+                            </li>
+                            <li value="viernes">
+                                <set name="dia_elegido"><first><rest><rest><rest><get name="dias_l"/></rest></rest></rest></first></set>
+                            </li>
+                            <li>
+                                <set name="error">true</set>
+                            </li>
+                        </condition>
+                    </li>
+                    <li value="miercoles">
+                         <condition var="dia_sem">
+                            <li value="miercoles">
+                                <set name="dia_elegido"><first><get name="dias_l"/></first></set>
+                            </li>
+                            <li value="jueves">
+                                <set name="dia_elegido"><first><rest><get name="dias_l"/></rest></first></set>               
+                            </li>
+                            <li value="viernes">
+                                <set name="dia_elegido"><first><rest><rest><get name="dias_l"/></rest></rest></first></set>
+                            </li>
+                            <li>
+                                <set name="error">true</set>
+                            </li>
+                        </condition>
+                    </li>
+                    <li value="jueves">
+                        <condition var="dia_sem">
+                            <li value="jueves">
+                                <set name="dia_elegido"><first><get name="dias_l"/></first></set>
+                            </li>
+                            <li value="viernes">
+                                <set name="dia_elegido"><first><rest><get name="dias_l"/></rest></first></set>
+                            </li>
+                            <li>
+                                <set name="error">true</set>
+                            </li>
+                        </condition>             
+                    </li>
+                    <li value="viernes">
+                        <condition var="dia_sem">
+                            <li value="viernes">
+                                <set name="dia_elegido"><first><get name="dias_l"/></first></set>
+                            </li>
+                            <li>
+                                <set name="error">true</set>
+                            </li>
+                        </condition> 
+                    </li>
+                    <li value="sabado">
+                        <set name="error">true</set>
+                    </li>
+                    <li value="domingo">
+                        <set name="error">true</set>
+                    </li>
+                </condition>
+            </think>
+        </template>
+    </category>
+
+    <category>
+        <pattern># cita # el # <set>weekday_es</set> de esa semana</pattern>
+        <template>
+            <srai>CALCULAR DIA ESPECIAL <star index="4"/></srai>
+
+            <condition name="error">
+                <li value="true">
+                    Por favor, elija un dia correcto
+                </li>
+                <li>
+                    <think>
+                        <set name="topic">unkown</set>
+                    </think>
+
+                    <srai>CITA EL <srai>CONVERTIR FECHA <get name="dia_elegido"/></srai></srai>                    
+                </li>
+            </condition>
+        </template>
+    </category>
+
+    <category>
+        <pattern># cita # el # <set>weekday_es</set> de esa semana por la maniana</pattern>
+        <template>
+            <srai>CALCULAR DIA ESPECIAL <star index="4"/></srai>
+
+            <condition name="error">
+                <li value="true">
+                    Por favor, elija un dia correcto
+                </li>
+                <li>
+                    <think>
+                        <set name="topic">unkown</set>
+                    </think>
+
+                    <srai>CITA EL <srai>CONVERTIR FECHA <get name="dia_elegido"/></srai> POR LA MANIANA</srai>                    
+                </li>
+            </condition>
+        </template>
+    </category>
+
+    <category>
+        <pattern># cita # el # <set>weekday_es</set> de esa semana por la tarde</pattern>
+        <template>
+            <srai>CALCULAR DIA ESPECIAL <star index="4"/></srai>
+
+            <condition name="error">
+                <li value="true">
+                    Por favor, elija un dia correcto
+                </li>
+                <li>
+                    <think>
+                        <set name="topic">unkown</set>
+                    </think>
+
+                    <srai>CITA EL <srai>CONVERTIR FECHA <get name="dia_elegido"/></srai> POR LA TARDE</srai>                    
+                </li>
+            </condition>
+        </template>
+    </category>
+</topic>
+
+</aiml>
